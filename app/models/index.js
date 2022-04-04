@@ -4,5 +4,5 @@ mongoose.Promise = global.Promise;
 const db = {};
 db.mongoose = mongoose;
 db.url = 'mongodb+srv://P6openclassrooms:P6openclassrooms@cluster0.pfz4v.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
-db.tutorials = require("./tutorial.model.js")(mongoose);
+db.tutorials = require("../../.env.exemple.js"),(mongoose);
 module.exports = db;

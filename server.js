@@ -28,13 +28,14 @@ db.mongoose
     console.log("Cannot connect to the database!", err);
     process.exit();
   });
+// simple route
+app.get("/", (req, res) => {
+  res.json({ message: "Response is OK." });
+});
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
-// simple route
-app.get("/", (req, res) => {
-  res.json({ message: "Response OK." });
-});
+
 
 
