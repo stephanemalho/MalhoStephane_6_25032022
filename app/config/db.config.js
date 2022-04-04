@@ -1,4 +1,19 @@
-// module.exports = {
-//     url: "mongodb://localhost:27017/bezkoder_db"
-//   };
-const env = require("../../.env.js");
+const mongoose = require("mongoose");
+require("dotenv").config();
+if (!process.env.MONGO_URI) {
+  console.log("No DB_URL found in .env configuration");
+}
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    ssl:true,
+  })
+  .then(() => {
+    console.log("Connected to database");
+  })
+  .catch((error) => {
+    console.log("Database connection error: " + error);
+  });
+  
+  MOD_EXP = mongoose.connection;
