@@ -16,4 +16,5 @@ mongoose
     console.log("Database connection error: " + error);
   });
   
-  MOD_EXP = mongoose.connection;
+  module.exports = mongoose.connection;
+

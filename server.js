@@ -3,7 +3,7 @@ const express = require("express"); // import express
 const bodyParser = require("body-parser");
 const cors = require("cors"); // import cors
 const app = express();
-MOD_EXP = "dotenv";
+module.exports = "dotenv";
 require("./app/config/db.config");
 
 var corsOptions = {
@@ -15,7 +15,6 @@ app.use(bodyParser.json());
 app.use(express.json());
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
-// set port, listen for requests
 
 // simple route
 app.get("/", (req, res) => {
