@@ -22,6 +22,6 @@ const userSchema = mongoose.Schema({
     }
 });
 
-UserSchema.plugin(uniqueValidator, {message: 'Éxiste déja.'});
+userSchema.plugin(uniqueValidator, {message: 'Éxiste déja.'});
 
 module.exports = mongoose.model('User', userSchema);
