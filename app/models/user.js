@@ -18,7 +18,7 @@ const userSchema = mongoose.Schema({
       minLength: [6, "Le mot de passe doit contenir au mois 6 caractères"],
       minNumbers: 1,
       minLowercase: 1,
-      minUppercase: 1,
+      minUppercase: 1
     }
 });
 
