@@ -49,4 +49,9 @@ exports.addDislike = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 }
 
-
+exports.updateSauce = (req, res, next) => {
+  const sauceObj = req.file ? { ...JSON.parse(req.body.sauce), imageUrl: req.file.filename } : { ...req.body };
+  Sauce.updateOne({ _id: req.params.id }, { ...sauceObj, _id: req.params.id })
+    .then(() => res.status(200).json({ message: "Sauce updated !" }))
+    .catch((error) => res.status(400).json({ error }));
+}
