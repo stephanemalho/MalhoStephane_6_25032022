@@ -12,7 +12,7 @@
 Icon
 
 # images and such
-./images
+../images
 
 # Thumbnails
 ._*
