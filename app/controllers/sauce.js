@@ -22,3 +22,31 @@ exports.getAllSaucesByUserId = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 }
 
+exports.createSauce = (req, res, next) => {
+  const sauceObj = JSON.parse(req.body.sauce);
+  delete sauceObj._id;
+  const sauce = new Sauce({
+    ...sauceObj,
+    imageUrl: `${req.protocol}://${req.get("host")}/images/${
+      req.file.filename
+    }`,
+  });
+  sauce
+    .save()
+    .then(() => res.status(201).json({ message: "Sauce send !" }))
+    .catch((error) => res.status(400).json({ error }));
+}
+
+exports.addLike = (req, res, next) => {
+  Sauce.updateOne({ _id: req.params.id }, { $inc: { likes: 1 } })
+    .then(() => res.status(200).json({ message: "Sauce liked !" }))
+    .catch((error) => res.status(400).json({ error }));
+}
+
+exports.addDislike = (req, res, next) => {
+  Sauce.updateOne({ _id: req.params.id }, { $inc: { dislikes: 1 } })
+    .then(() => res.status(200).json({ message: "Sauce disliked !" }))
+    .catch((error) => res.status(400).json({ error }));
+}
+
+
