@@ -4,6 +4,6 @@ const userRoutes = require("./user");
 const sauceRoutes = require("./sauce");
 
 router.use("/auth", userRoutes);
-router.use("/api", sauceRoutes);
+router.use("/sauces", sauceRoutes);
 
 module.exports= router;
