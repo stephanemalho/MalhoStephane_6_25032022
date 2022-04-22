@@ -40,3 +40,9 @@ exports.updateSauce = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
+exports.deleteSauce = (req, res, next) => {
+  Sauce.deleteOne({ _id: req.params.id })
+    .then(() => res.status(200).json({ message: "Sauce deleted !" }))
+    .catch((error) => res.status(400).json({ error }));
+}
+
