@@ -5,6 +5,7 @@ const sauceRoutes = require("./sauce");
 const likeRoutes = require("./like");
 
 
+
 router.use("/auth", userRoutes); // auth routes
 router.use("/sauces", sauceRoutes); // sauce routes
 router.use("/sauces", likeRoutes); // like routes

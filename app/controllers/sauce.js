@@ -1,5 +1,6 @@
-const Sauce = require("../models/sauce");
-const fs = require("fs");
+const Sauce = require("../models/sauce"); // import the sauce model
+const fs = require("fs"); // file system
+
 
 exports.readSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id }) // find the sauce
@@ -70,11 +71,11 @@ exports.likeSauce = (req, res, next) => {
         {
           $inc: { dislikes: 1}, // add a dislike
           $push: { usersDisliked: req.body.userId }, // add the user to the list of users disliked
-          _id: req.params.id, // add the _id
+          _id: req.params.id, 
         }
       )
         .then(() => {
-          res.status(201).json({ message: "your dislike as been sent!" }); 
+          res.status(200).json({ message: "your dislike as been sent!" }); 
         })
         .catch((error) => {
           res.status(400).json({ error: error });
@@ -93,7 +94,7 @@ exports.likeSauce = (req, res, next) => {
               }
             )
               .then(() => {
-                res.status(201).json({ message: "Your report as been sent!" });
+                res.status(200).json({ message: "Your report as been sent!" });
               })
               .catch((error) => {
                 res.status(400).json({ error: error }); 
@@ -109,7 +110,7 @@ exports.likeSauce = (req, res, next) => {
               }
             )
               .then(() => {
-                res.status(201).json({ message: "Your report as been sent!!" });
+                res.status(200).json({ message: "Your report as been sent!!" });
               })
               .catch((error) => {
                 res.status(400).json({ error: error });
@@ -130,7 +131,7 @@ exports.likeSauce = (req, res, next) => {
         }
       )
         .then(() => {
-          res.status(201).json({ message: "Your like as been sent!" });
+          res.status(200).json({ message: "Your like as been sent!" }); 
         })
         .catch((error) => {
           res.status(400).json({ error: error });
