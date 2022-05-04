@@ -4,8 +4,13 @@ const cors = require("cors"); // import cors
 const app = express();
 module.exports = "dotenv"; // export dotenv
 require("./app/config/db.config");
-
+const hateoasLinker = require("express-hateoas-links");
 const path = require('path');
+
+
+
+// add hateoas links
+app.use(hateoasLinker); 
 
 // parse requests of content-type - application/json
 app.use(express.json()); 
