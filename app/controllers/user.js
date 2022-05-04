@@ -40,7 +40,7 @@ exports.signup = (req, res, next) => {
       });
       user
         .save() // save the user
-        .then(() => res.status(201).json({ message: "Utilisateur créé"}, hateoasLinks(req)))
+        .then(() => res.status(201).json({ message: "Utilisateur créé"},user, hateoasLinks(req)))
         .catch((error) => res.status(422).json({ error }));
     })
     .catch((error) => res.status(500).json({ error }));
@@ -64,6 +64,7 @@ exports.login = (req, res, next) => {
             token: jwt.sign({ userId: user._id }, process.env.JWT_TOKEN, {
               expiresIn: "24h"
             }), 
+            User: user,
             hateoasLinks: hateoasLinks(req),
           });
         })
@@ -72,18 +73,34 @@ exports.login = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
+
+exports.deleteUser = (req, res, next) => {
+  const deletedUserId = req.params.id;
+  User.findOneAndDelete({ _id: deletedUserId })
+    .then(() => res.status(200).json({ message: "Utilisateur supprimé" }))
+    .catch((error) => res.status(500).json({ error }));
+}
+
 const hateoasLinks = (req) => {
-  const Uri = `${req.protocol}://${req.get("host")}`;
+  const URI = `${req.protocol}://${req.get("host")+ "/api/auth"}`;
   return [
     {
       rel: "signup",
       title: "Signup",
-      href: Uri + "/api/auth/signup",
+      href: URI + "/signup",
+      method: "POST",
     },
     {
       rel: "login",
       title: "Login",
-      href: Uri + "/api/auth/login",
-    }    
+      href: URI + "/login",
+      method: "POST",
+    },
+    {
+      rel: "delete",
+      title: "Delete",
+      href: URI + "/delete",
+      method: "DELETE",
+    }  
   ]
 }

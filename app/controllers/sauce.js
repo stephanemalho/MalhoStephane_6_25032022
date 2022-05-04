@@ -19,7 +19,7 @@ exports.readAllSauces = (req, res, next) => {
         sauce.imageUrl =
           `${req.protocol}://${req.get("host")}/` + sauce.imageUrl; // add image url
           const hateoasLink =  hateoasLinks(req, sauce._id);
-        return {sauce, hateoasLink}
+          return {...sauce._doc, hateoasLink}
       });
       res.status(200).json(sauces);
     }) // send the sauces
@@ -50,8 +50,8 @@ exports.updateSauce = (req, res, next) => {
       imageUrl: `images/${req.file.filename}`
     } : { ...req.body }; // if there is a file, add the image url
   Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id }) // update the sauce
-    .then(() => res.status(200).json(sauce, hateoasLinks(req, sauce._id)))
-    .catch((error) => res.status(400).json({ error }));
+    .then(() => res.status(200).json( { message: "The update as been sent " }, hateoasLinks(req, Sauce._id)))
+    .catch((error) => res.status(400).json({ error: error }));
 };
 
 // delete the sauce
@@ -70,10 +70,11 @@ exports.deleteSauce = (req, res, next) => {
 
 // likes methods
 exports.likeSauce = (req, res, next) => {
-  Sauce.findById(req.params.id) // find the sauce
+   Sauce.findById(req.params.id) // find the sauce
         .then((sauce) => {
-          const toChange = {};
+          let toChange = {};
           switch (req.body.like) { 
+            
             case -1: 
             toChange = {
               $inc: { dislikes: 1}, // add a dislike
@@ -85,7 +86,7 @@ exports.likeSauce = (req, res, next) => {
                   $push: { usersDisliked: req.body.userId }, 
                   $pull: { usersLiked: req.body.userId } 
                 }
-            }
+            } 
               Sauce.updateOne(
                 { _id: req.params.id },
                 toChange
@@ -98,8 +99,6 @@ exports.likeSauce = (req, res, next) => {
                 });
               break;
             case 0:
-              
-                
                   if (sauce["usersLiked"].includes(req.body.userId)) { // if the user is already liked
                     Sauce.updateOne(
                       { _id: req.params.id },
@@ -145,12 +144,13 @@ exports.likeSauce = (req, res, next) => {
               }
               Sauce.updateOne( 
                 { _id: req.params.id }, 
-                toChange
+                toChange 
               )
                 .then(() => {
-                  res.status(200).json( sauce, hateoasLinks(req, sauce._id) ); 
+                  res.status(200).json( sauce,  hateoasLinks(req, sauce._id) ); 
                 })
                 .catch((error) => {
+                  console.log(error);
                   res.status(400).json({ error: error });
                 });
               break;
@@ -159,14 +159,26 @@ exports.likeSauce = (req, res, next) => {
           }
         })
         .catch();
-  
 };
+
 
 
 // hateoas links
 const hateoasLinks = (req, id) => { 
   const URI = req.protocol + "://" + req.get("host");
   return [
+    {
+      rel: "readSauce",
+      method: "GET",
+      href: URI + "/api/sauces/" + id,
+      title: "Read sauce",
+    },
+    {
+      rel: "readAllSauces",
+      method: "GET",
+      href: URI + "/api/sauces",
+      title: "Read all sauces",
+    },
     {
       rel: "create",
       method: "POST",
@@ -187,13 +199,13 @@ const hateoasLinks = (req, id) => {
     },
     {
       rel: "like",
-      method: "PUT",
+      method: "POST",
       href: URI + "/api/sauces/" + id + "/like",
       title: "Add like"
     },
     {
       rel: "dislike",
-      method: "PUT",
+      method: "POST",
       href: URI + "/api/sauces/" + id + "/dislike",
       title: "Remove like"
     }

@@ -12,13 +12,19 @@ const userSchema = mongoose.Schema({
       maxlength: 64
     },
   password: 
-    { type: String, 
+    { 
+      type: String, 
       required: [true, "Mot de passe requis"],
       trim: true,
       minLength: [6, "Le mot de passe doit contenir au mois 6 caractères"],
       minNumbers: 1,
       minLowercase: 1,
       minUppercase: 1
+    },
+    reports: 
+    { 
+      type: Number, 
+      default: 0 
     }
 });
 
