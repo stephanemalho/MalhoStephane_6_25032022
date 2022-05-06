@@ -21,7 +21,7 @@ exports.readAllSauces = (req, res, next) => {
           const hateoasLink =  hateoasLinks(req, sauce._id);
           return {...sauce._doc, hateoasLink}
       });
-      res.status(200).json(sauces);
+      res.status(200).json(sauces, hateoasLinks(req, sauces._id)); // send the sauces
     }) // send the sauces
     .catch((error) => res.status(400).json({ error })); // if not found
 };
@@ -49,8 +49,8 @@ exports.updateSauce = (req, res, next) => {
       ...JSON.parse(req.body.sauce),
       imageUrl: `images/${req.file.filename}`
     } : { ...req.body }; // if there is a file, add the image url
-  Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id }) // update the sauce
-    .then(() => res.status(200).json( { message: "The update as been sent " }, hateoasLinks(req, Sauce._id)))
+   Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id }) // update the sauce
+    .then(() => res.status(200).json({ message: "The update as been sent " }, hateoasLinks(req, Sauce._id)))
     .catch((error) => res.status(400).json({ error: error }));
 };
 
@@ -61,7 +61,7 @@ exports.deleteSauce = (req, res, next) => {
       const filename = sauce.imageUrl.split("/images/")[1]; // get the filename
       fs.unlink(`images/${filename}`, () => { 
         Sauce.deleteOne({ _id: req.params.id }) 
-          .then(() => res.status(200).json({ message: "Sauce deleted !" }))
+          .then(() => res.status(200).json({ message: "Sauce deleted !" }, hateoasLinks(req, Sauce._id)))
           .catch((error) => res.status(400).json({ error }));
       });
     })

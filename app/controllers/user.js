@@ -81,6 +81,70 @@ exports.deleteUser = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 }
 
+// exports.reportUser = (req, res, next) => {
+//   const userId = req.params.id;
+//   User.findOne({ _id: userId })
+//   .then((user) => {
+//     let toChange = {};
+//     switch (req.body.report){ 
+//       case 0: 
+//       toChange = {
+//         $inc: { report: 1}, 
+//       }
+//         user.updateOne(
+//           { _id: userId },
+//           toChange
+//         )
+//           .then(() => {
+//             res.status(200).json({ message: "your report as been sent!" }); 
+//           })
+//           .catch((error) => {
+//             res.status(400).json({ error: error });
+//           });
+//         break;
+//       case 1:
+//         toChange = {
+//           $inc: { report: -1},
+//         }
+//         report.updateOne( 
+//           { _id: req.params.id }, 
+//           toChange 
+//         )
+//           .then(() => {
+//             res.status(200).json( sauce,  hateoasLinks(req, user._id) ); 
+//           })
+//           .catch((error) => {
+//             console.log(error);
+//             res.status(400).json({ error: error });
+//           });
+//         break;
+//       default:
+//         console.error("Bad request");
+//     }
+//   })
+// }
+
+exports.readUserInfo = (req, res, next) => {
+  const userId = req.params.id;
+  User.findOne({ _id: userId })
+    .then((user) => res.status(200).json(user, hateoasLinks(req)))
+    .catch((error) => res.status(500).json({ error }));
+    
+}
+
+exports.updateUserAccount = (req, res, next) => {
+  const userId = req.params.id;
+  const user = new User({
+    email: req.body.email,
+    password: req.body.password,
+  });
+  User.findOneAndUpdate({ _id: userId }, user)
+    .then(() => res.status(200).json(user , hateoasLinks(req)))
+    .catch((error) => res.status(500).json({ error }));
+}
+
+
+
 const hateoasLinks = (req) => {
   const URI = `${req.protocol}://${req.get("host")+ "/api/auth"}`;
   return [
@@ -101,6 +165,24 @@ const hateoasLinks = (req) => {
       title: "Delete",
       href: URI + "/delete",
       method: "DELETE",
-    }  
+    },
+    {
+      rel: "read",
+      title: "Read",
+      href: URI + "/:id",
+      method: "GET",
+    },
+    {
+      rel: "update",
+      title: "Update",
+      href: URI + "/:id",
+      method: "PUT",
+    },
+    {
+      rel: "report",
+      title: "Report",
+      href: URI + "/:id/report",
+      method: "POST",
+    }
   ]
 }
