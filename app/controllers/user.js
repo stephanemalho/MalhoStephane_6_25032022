@@ -146,7 +146,7 @@ exports.updateUserAccount = (req, res, next) => {
 
 
 const hateoasLinks = (req) => {
-  const URI = `${req.protocol}://${req.get("host")+ "/api/auth"}`;
+  const URI = `${req.protocol}://${req.get("host") + "/api/auth"}`;
   return [
     {
       rel: "signup",
@@ -163,25 +163,25 @@ const hateoasLinks = (req) => {
     {
       rel: "delete",
       title: "Delete",
-      href: URI + "/delete",
+      href: URI,
       method: "DELETE",
     },
     {
       rel: "read",
       title: "Read",
-      href: URI + "/:id",
+      href: URI,
       method: "GET",
     },
     {
       rel: "update",
       title: "Update",
-      href: URI + "/:id",
+      href: URI,
       method: "PUT",
     },
     {
       rel: "report",
       title: "Report",
-      href: URI + "/:id/report",
+      href: URI + id + "/report",
       method: "POST",
     }
   ]

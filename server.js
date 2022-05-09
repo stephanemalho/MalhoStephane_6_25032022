@@ -8,7 +8,6 @@ const hateoasLinker = require("express-hateoas-links");
 const path = require('path');
 
 
-
 // add hateoas links
 app.use(hateoasLinker); 
 
@@ -21,6 +20,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS'); // allow methods   
   next();
 }); 
+
 
 // allow cors 
 var corsOptions = {

@@ -49,8 +49,8 @@ exports.updateSauce = (req, res, next) => {
       ...JSON.parse(req.body.sauce),
       imageUrl: `images/${req.file.filename}`
     } : { ...req.body }; // if there is a file, add the image url
-   Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id }) // update the sauce
-    .then(() => res.status(200).json({ message: "The update as been sent " }, hateoasLinks(req, Sauce._id)))
+   Sauce.findOneAndUpdate({ _id: req.params.id },sauceObject,{new : true}) // update the sauce
+    .then((sauce) => res.status(200).json(sauce , hateoasLinks(req, sauce._id)))
     .catch((error) => res.status(400).json({ error: error }));
 };
 
@@ -61,7 +61,7 @@ exports.deleteSauce = (req, res, next) => {
       const filename = sauce.imageUrl.split("/images/")[1]; // get the filename
       fs.unlink(`images/${filename}`, () => { 
         Sauce.deleteOne({ _id: req.params.id }) 
-          .then(() => res.status(200).json({ message: "Sauce deleted !" }, hateoasLinks(req, Sauce._id)))
+          .then(() => res.status(204).send())
           .catch((error) => res.status(400).json({ error }));
       });
     })
@@ -92,7 +92,7 @@ exports.likeSauce = (req, res, next) => {
                 toChange
               )
                 .then(() => {
-                  res.status(200).json({ message: "your dislike as been sent!" }); 
+                  res.status(200).json(sauce,  hateoasLinks(req, sauce._id)); 
                 })
                 .catch((error) => {
                   res.status(400).json({ error: error });
@@ -123,7 +123,7 @@ exports.likeSauce = (req, res, next) => {
                       }
                     )
                       .then(() => {
-                        res.status(200).json({ message: "User disliked removed" });
+                        res.status(200).json(sauce,  hateoasLinks(req, sauce._id));
                       })
                       .catch((error) => {
                         res.status(400).json({ error: error });
@@ -168,13 +168,13 @@ const hateoasLinks = (req, id) => {
   const URI = req.protocol + "://" + req.get("host");
   return [
     {
-      rel: "readSauce",
+      rel: "readOne",
       method: "GET",
       href: URI + "/api/sauces/" + id,
       title: "Read sauce",
     },
     {
-      rel: "readAllSauces",
+      rel: "readAll",
       method: "GET",
       href: URI + "/api/sauces",
       title: "Read all sauces",
@@ -198,16 +198,10 @@ const hateoasLinks = (req, id) => {
       title: "Delete a sauce"
     },
     {
-      rel: "like",
+      rel: "likeDislike",
       method: "POST",
       href: URI + "/api/sauces/" + id + "/like",
-      title: "Add like"
-    },
-    {
-      rel: "dislike",
-      method: "POST",
-      href: URI + "/api/sauces/" + id + "/dislike",
-      title: "Remove like"
+      title: "Add like or dislike"
     }
   ]
 }
