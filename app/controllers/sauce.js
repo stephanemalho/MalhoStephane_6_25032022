@@ -68,13 +68,13 @@ exports.deleteSauce = (req, res, next) => {
     .catch((error) => res.status(404).json({ error }));
 }
 
-// likes methods
+//likes methods
 exports.likeSauce = (req, res, next) => {
    Sauce.findById(req.params.id) // find the sauce
+      //Sauce.findOne({ _id: req.params.id })
         .then((sauce) => {
           let toChange = {};
           switch (req.body.like) { 
-            
             case -1: 
             toChange = {
               $inc: { dislikes: 1}, // add a dislike
@@ -87,7 +87,7 @@ exports.likeSauce = (req, res, next) => {
                   $pull: { usersLiked: req.body.userId } 
                 }
             } 
-              Sauce.updateOne(
+              Sauce.findByIdAndUpdate(
                 { _id: req.params.id },
                 toChange
               )
@@ -100,7 +100,7 @@ exports.likeSauce = (req, res, next) => {
               break;
             case 0:
                   if (sauce["usersLiked"].includes(req.body.userId)) { // if the user is already liked
-                    Sauce.updateOne(
+                    Sauce.findByIdAndUpdate(
                       { _id: req.params.id },
                       {
                         $inc: { likes: -1}, // remove a like
@@ -108,14 +108,14 @@ exports.likeSauce = (req, res, next) => {
                       }
                     )
                       .then(() => {
-                        res.status(200).json({ message: "User liked removed" });
+                        res.status(200).json(sauce,  hateoasLinks(req, sauce._id));
                       })
                       .catch((error) => {
                         res.status(400).json({ error: error }); 
                       });
                   }
                   if (sauce["usersDisliked"].includes(req.body.userId)) { // if the user is already disliked
-                    Sauce.updateOne(
+                    Sauce.findByIdAndUpdate(
                       { _id: req.params.id },
                       {
                         $inc: { dislikes: -1},  // remove a dislike
@@ -142,9 +142,9 @@ exports.likeSauce = (req, res, next) => {
                     $push: { usersLiked: req.body.userId } 
                   }
               }
-              Sauce.updateOne( 
+              Sauce.findByIdAndUpdate( 
                 { _id: req.params.id }, 
-                toChange 
+                toChange  
               )
                 .then(() => {
                   res.status(200).json( sauce,  hateoasLinks(req, sauce._id) ); 
@@ -160,6 +160,8 @@ exports.likeSauce = (req, res, next) => {
         })
         .catch();
 };
+
+
 
 
 
