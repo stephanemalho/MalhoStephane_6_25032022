@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const CryptoJS = require("crypto-js");
-const ObjectID = require("mongoose").ObjectID;
+//const ObjectID = require("mongoose").ObjectID;
 
 function encrypt(email) {
   return CryptoJS.AES.encrypt(
@@ -81,15 +81,9 @@ exports.login = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
-// exports.deleteUser = (req, res, next) => {
-//   const deletedUserById = req.params.id;
-//   User.findOneAndDelete({ _id: deletedUserById })
-//     .then(() => res.status(204).json({ message: "Utilisateur supprimé" }))
-//     .catch((error) => res.status(500).json({ error }));
-// }
 exports.deleteUser = (req, res, next) => {
-  User.findOneAndDelete({ userId: req.params.id }) // find the user and delete it
-    .then((user) => {
+  User.findOneAndDelete({ userId: req.auth.userID }) // find the user and delete it
+    .then(() => {
       res.status(200).json({ message: "User deleted" });
     }) // send the response and the user
     .catch((error) =>
@@ -97,71 +91,51 @@ exports.deleteUser = (req, res, next) => {
     ); // if not found
 };
 
-// exports.reportUser = (req, res, next) => {
-//   User.findById(req.params.id)
-//     .then((user) => {
-//       toChange = {};
-//       if (!user) {
-//         return res.status(404).json({ error: "Utilisateur non trouvé" });
-//       }
-//       user.reports.push(req.body.report);
-//       toChange = {
-//         $inc: {reports : 1},
-//       }
-//       User.findOneAndUpdate({ _id: req.params.id }, toChange)
-//       user.save()
-//         .then(() => res.status(200).json({ message: "Utilisateur signalé" }))
-//         .catch((error) => res.status(500).json({ error }));
-//     })
-//     .catch((error) => res.status(500).json({ error }));
-// }
 
-module.exports.reportUser = (req, res) => {
-  if (!ObjectID.isValid(req.params.id) || !ObjectID.isValid(req.body.id))
-    return res.status(404).send("ID unknown :" + req.params.id);
-
-  try {
-    User.findByIdAndUpdate(
-      req.params.id,
-      { $push: { reports: req.body.id } },
-      { new: true, upsert: true },
-      (err, docs) => {
-        if (!err) {
-          res.status(200).json(docs);
-        } else return res.status(404).json(err);
+// report user 
+exports.reportUser = (req, res, next) => {
+  User.findById(req.params.id)
+    .then((user) => {
+      if (!user["userWhoReported"].includes(req.auth.userID)) {
+        User.findByIdAndUpdate(
+          { _id: req.params.id },
+          {
+            $inc: { reports: 1 },
+            $push: { userWhoReported: req.auth.userID },
+          },
+          { new: true }
+        )
+          .then((newUser) => {
+            return res.status(200).json(newUser, hateoasLinks(req, User._id));
+          })
+          .catch((error) => {
+            return res.status(400).json({ error: error });
+          });
+      } else {
+        res.status(404).json({ error: "User not found or already reported" });
       }
-    );
-    User.findByIdAndUpdate(
-      req.body.id,
-      { $push: { reports: req.params.id } },
-      { new: true, upsert: true },
-      (err, docs) => {
-        // if (!err) res.status(200).json(docs);
-        if (err) return res.status(404).json(err);
-      }
-    );
-  } catch (err) {
-    return res.status(500).json({ message: err });
-  }
+    })
+    .catch((error) => res.status(500).json({ error }));
 };
 
+
 exports.readUserInfo = (req, res, next) => {
-  const userId = req.params.id;
-  User.findOne({ _id: userId })
-    .then((user) => res.status(200).json(user, hateoasLinks(req)))
+  let emailToDecrypt = encrypt(req.body.email);
+  User.findOneAndUpdate({ email: emailToDecrypt })
+    .then((user) => {
+      if (!user) {
+        res.status(404).send({ error });
+      }
+      User.email = decrypt(emailToDecrypt);
+      return res.status(200).json(user, hateoasLinks(req, User._id));
+    })
     .catch((error) => res.status(500).json({ error }));
 };
 
 exports.updateUserAccount = (req, res, next) => {
-  const userId = req.params.id;
-  const user = new User({
-    email: req.body.email,
-    password: req.body.password,
-  });
-  User.findOneAndUpdate({ _id: userId }, user)
-    .then(() => res.status(200).json(user, hateoasLinks(req)))
-    .catch((error) => res.status(500).json({ error }));
+  
 };
+
 
 const hateoasLinks = (req, id) => {
   const URI = `${req.protocol}://${req.get("host") + "/api/auth"}`;
@@ -201,6 +175,12 @@ const hateoasLinks = (req, id) => {
       title: "Report",
       href: URI + id + "/report",
       method: "POST",
+    },
+    {
+      rel: "readUserInfo",
+      title: "ReadUserInfo",
+      href: URI,
+      method: "GET",
     },
   ];
 };

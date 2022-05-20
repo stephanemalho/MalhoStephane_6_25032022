@@ -57,6 +57,16 @@ const sauceSchema = mongoose.Schema({
       type: String,
       ref: "User"
     }], 
+    reports: 
+    { 
+      type: Number, 
+      default: 0 
+    },
+    usersWhoReportedTheSauce: 
+    [{ 
+      type: String,
+      ref: "User" 
+    }]
 }, {timestamps: true});
 
 

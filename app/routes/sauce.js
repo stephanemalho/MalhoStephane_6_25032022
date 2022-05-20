@@ -10,6 +10,7 @@ router.get("/",auth, sauceCtrl.readAllSauces); // get all the sauces
 router.post("/", auth, multer, sauceCtrl.createSauce); // create a sauce
 router.put("/:id", auth, multer, sauceCtrl.updateSauce); // update a sauce 
 router.delete("/:id", auth, sauceCtrl.deleteSauce); // delete a sauce
+router.post("/:id/report",auth,sauceCtrl.reportSauce); // report a sauce
 
 
 module.exports = router;

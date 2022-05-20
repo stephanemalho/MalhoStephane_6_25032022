@@ -25,7 +25,13 @@ const userSchema = mongoose.Schema({
     { 
       type: Number, 
       default: 0 
-    }
+    },
+    userWhoReported: 
+    [{ 
+      type: String,
+      ref: "User" 
+    }]
+    
 });
 
 userSchema.plugin(uniqueValidator, {message: 'Éxiste déja.'});
