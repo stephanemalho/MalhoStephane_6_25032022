@@ -6,7 +6,6 @@ const userSchema = mongoose.Schema({
     { 
       type: String, 
       required: [true, "Champ requis"], 
-      lowercase: true, 
       unique: true,
       trim: true,
       maxlength: 64

@@ -4,23 +4,29 @@ const User = require("../models/user");
 const CryptoJS = require("crypto-js");
 
 function encryptString(content) {
-    const parsedkey = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE);
-    const iv = CryptoJS.enc.Utf8.parse(process.env.IV);
-    const encrypted = CryptoJS.AES.encrypt(content, parsedkey, { iv: iv, mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 });
-    return encrypted.toString();
-};
-
+  const parsedkey = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE);
+  const iv = CryptoJS.enc.Utf8.parse(process.env.IV);
+  const encrypted = CryptoJS.AES.encrypt(content, parsedkey, {
+    iv: iv,
+    mode: CryptoJS.mode.ECB,
+    padding: CryptoJS.pad.Pkcs7,
+  });
+  return encrypted.toString();
+}
 
 function decryptString(word) {
-    var keys = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE);
-    let base64 = CryptoJS.enc.Base64.parse(word);
-    let src = CryptoJS.enc.Base64.stringify(base64);
-    var decrypt = CryptoJS.AES.decrypt(src, keys, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 });
-    return decrypt.toString(CryptoJS.enc.Utf8);
-};
+  var keys = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE);
+  let base64 = CryptoJS.enc.Base64.parse(word);
+  let src = CryptoJS.enc.Base64.stringify(base64);
+  var decrypt = CryptoJS.AES.decrypt(src, keys, {
+    mode: CryptoJS.mode.ECB,
+    padding: CryptoJS.pad.Pkcs7,
+  });
+  return decrypt.toString(CryptoJS.enc.Utf8);
+}
 
 const test = encryptString("test");
-console.log(decryptString(test))
+console.log(decryptString(test));
 
 exports.signup = (req, res, next) => {
   bcrypt
@@ -58,9 +64,9 @@ exports.login = (req, res, next) => {
           if (!valid) {
             return res.status(401).json({ error: "Mot de passe incorrect !" });
           }
-            user.email = decryptString(user.email)
+          user.email = decryptString(user.email);
 
-            res.status(200).json({
+          res.status(200).json({
             userId: user._id,
             token: jwt.sign({ userId: user._id }, process.env.JWT_TOKEN, {
               expiresIn: "24h",
@@ -83,7 +89,6 @@ exports.deleteUser = (req, res, next) => {
       res.status(404).json({ error: "User not found" + error })
     ); // if not found
 };
-
 
 // report user
 exports.reportUser = (req, res, next) => {
@@ -111,26 +116,21 @@ exports.reportUser = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
-
 exports.readUser = (req, res, next) => {
-  User.findOne(
-      {_id: req.auth.userID},
-  )
+  User.findOne({ _id: req.auth.userID })
     .then((user) => {
       if (!user) {
         res.status(404).send("user not find");
       }
-      user.email=decryptString(user.email)
-        res.status(200).json(user, hateoasLinks(req, user._id));
+      user.email = decryptString(user.email);
+      res.status(200).json(user, hateoasLinks(req, user._id));
     })
     .catch((error) => console.log(error));
 };
 
-
 exports.updateUserAccount = (req, res, next) => {
-//Si j'ai un email alors je l'eno
+  //Si j'ai un email alors je l'eno
 };
-
 
 const hateoasLinks = (req, id) => {
   const URI = `${req.protocol}://${req.get("host") + "/api/auth"}`;
