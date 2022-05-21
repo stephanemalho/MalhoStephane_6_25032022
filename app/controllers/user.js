@@ -2,34 +2,53 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const CryptoJS = require("crypto-js");
-//const ObjectID = require("mongoose").ObjectID;
+
+
+var data = User({email: ""});
+var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(data), process.env.PASSPHRASE).toString();
 
 function encrypt(email) {
-  return CryptoJS.AES.encrypt(
-    // encrypt the email
-    email,
-    CryptoJS.enc.Base64.parse(process.env.PASSPHRASE),
-    {
-      iv: CryptoJS.enc.Base64.parse(process.env.IV),
-      mode: CryptoJS.mode.ECB,
-      padding: CryptoJS.pad.Pkcs7,
-    }
-  ).toString();
+  return ciphertext;
 }
 
+
 function decrypt(email) {
-  var bytes = CryptoJS.AES.decrypt(
-    // decrypt the email
-    email,
-    CryptoJS.enc.Base64.parse(process.env.PASSPHRASE),
-    {
-      iv: CryptoJS.enc.Base64.parse(process.env.IV),
-      mode: CryptoJS.mode.ECB,
-      padding: CryptoJS.pad.Pkcs7,
-    }
-  );
-  return bytes.toString(CryptoJS.enc.Utf8);
+  var bytes = CryptoJS.AES.decrypt(ciphertext, process.env.PASSPHRASE);
+  //var decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+  var originalText = bytes.toString(CryptoJS.enc.Utf8);
+  //return decryptedData;
+  return originalText;
 }
+
+
+
+// function encrypt(email) {
+//   return CryptoJS.AES.encrypt(
+//     // encrypt the email
+//     email,
+//     CryptoJS.enc.Base64.parse(process.env.PASSPHRASE),
+//     {
+//       iv: CryptoJS.enc.Base64.parse(process.env.IV),
+//       mode: CryptoJS.mode.ECB,
+//       padding: CryptoJS.pad.Pkcs7,
+//     }
+//   ).toString();
+// }
+
+// function decrypt(email) {
+//   var bytes = CryptoJS.AES.decrypt(
+//     // decrypt the email
+//     email,
+//     CryptoJS.enc.Base64.parse(process.env.PASSPHRASE),
+//     {
+//       iv: CryptoJS.enc.Base64.parse(process.env.IV),
+//       mode: CryptoJS.mode.ECB,
+//       padding: CryptoJS.pad.Pkcs7,
+//     }
+//   );
+//   return bytes.toString(CryptoJS.enc.Utf8);
+// }
+
 
 exports.signup = (req, res, next) => {
   bcrypt
@@ -120,14 +139,20 @@ exports.reportUser = (req, res, next) => {
 
 
 exports.readUserInfo = (req, res, next) => {
-  let emailToDecrypt = encrypt(req.body.email);
-  User.findOneAndUpdate({ email: emailToDecrypt })
+  let emailToDecrypt = decrypt(req.body.email);
+  User.findOneAndUpdate(
+    { email: emailToDecrypt },
+  )
     .then((user) => {
       if (!user) {
         res.status(404).send({ error });
+      } else {
+        
+        user.email = emailToDecrypt;
+        res.status(200).json(user, hateoasLinks(req, User._id));
+
       }
-      User.email = decrypt(emailToDecrypt);
-      return res.status(200).json(user, hateoasLinks(req, User._id));
+
     })
     .catch((error) => res.status(500).json({ error }));
 };
