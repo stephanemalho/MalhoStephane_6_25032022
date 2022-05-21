@@ -115,7 +115,6 @@ exports.reportUser = (req, res, next) => {
 exports.readUser = (req, res, next) => {
   User.findOne(
       {_id: req.auth.userID},
-      {email : encryptString(req.auth.email)},
   )
     .then((user) => {
       if (!user) {
