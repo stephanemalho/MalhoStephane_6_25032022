@@ -3,58 +3,30 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const CryptoJS = require("crypto-js");
 
-
-var data = User({email: ""});
-var ciphertext = CryptoJS.AES.encrypt(JSON.stringify(data), process.env.PASSPHRASE).toString();
-
-function encrypt(email) {
-  return ciphertext;
-}
-
-
-function decrypt(email) {
-  var bytes = CryptoJS.AES.decrypt(ciphertext, process.env.PASSPHRASE);
-  //var decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-  var originalText = bytes.toString(CryptoJS.enc.Utf8);
-  //return decryptedData;
-  return originalText;
-}
+function encryptString(content) {
+    const parsedkey = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE);
+    const iv = CryptoJS.enc.Utf8.parse(process.env.IV);
+    const encrypted = CryptoJS.AES.encrypt(content, parsedkey, { iv: iv, mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 });
+    return encrypted.toString();
+};
 
 
+function decryptString(word) {
+    var keys = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE);
+    let base64 = CryptoJS.enc.Base64.parse(word);
+    let src = CryptoJS.enc.Base64.stringify(base64);
+    var decrypt = CryptoJS.AES.decrypt(src, keys, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 });
+    return decrypt.toString(CryptoJS.enc.Utf8);
+};
 
-// function encrypt(email) {
-//   return CryptoJS.AES.encrypt(
-//     // encrypt the email
-//     email,
-//     CryptoJS.enc.Base64.parse(process.env.PASSPHRASE),
-//     {
-//       iv: CryptoJS.enc.Base64.parse(process.env.IV),
-//       mode: CryptoJS.mode.ECB,
-//       padding: CryptoJS.pad.Pkcs7,
-//     }
-//   ).toString();
-// }
-
-// function decrypt(email) {
-//   var bytes = CryptoJS.AES.decrypt(
-//     // decrypt the email
-//     email,
-//     CryptoJS.enc.Base64.parse(process.env.PASSPHRASE),
-//     {
-//       iv: CryptoJS.enc.Base64.parse(process.env.IV),
-//       mode: CryptoJS.mode.ECB,
-//       padding: CryptoJS.pad.Pkcs7,
-//     }
-//   );
-//   return bytes.toString(CryptoJS.enc.Utf8);
-// }
-
+const test = encryptString("test");
+console.log(decryptString(test))
 
 exports.signup = (req, res, next) => {
   bcrypt
     .hash(req.body.password, 10) // hash the password
     .then((hash) => {
-      const emailEncrypted = encrypt(req.body.email); // encrypt the email
+      const emailEncrypted = encryptString(req.body.email); // encryptString the email
       const user = new User({
         // create a new user
         email: emailEncrypted,
@@ -74,7 +46,7 @@ exports.signup = (req, res, next) => {
 };
 
 exports.login = (req, res, next) => {
-  const emailEncrypted = encrypt(req.body.email);
+  const emailEncrypted = encryptString(req.body.email);
   User.findOne({ email: emailEncrypted })
     .then((user) => {
       if (!user) {
@@ -86,7 +58,9 @@ exports.login = (req, res, next) => {
           if (!valid) {
             return res.status(401).json({ error: "Mot de passe incorrect !" });
           }
-          res.status(200).json({
+            user.email = decryptString(user.email)
+
+            res.status(200).json({
             userId: user._id,
             token: jwt.sign({ userId: user._id }, process.env.JWT_TOKEN, {
               expiresIn: "24h",
@@ -111,7 +85,7 @@ exports.deleteUser = (req, res, next) => {
 };
 
 
-// report user 
+// report user
 exports.reportUser = (req, res, next) => {
   User.findById(req.params.id)
     .then((user) => {
@@ -138,27 +112,24 @@ exports.reportUser = (req, res, next) => {
 };
 
 
-exports.readUserInfo = (req, res, next) => {
-  let emailToDecrypt = decrypt(req.body.email);
-  User.findOneAndUpdate(
-    { email: emailToDecrypt },
+exports.readUser = (req, res, next) => {
+  User.findOne(
+      {_id: req.auth.userID},
+      {email : encryptString(req.auth.email)},
   )
     .then((user) => {
       if (!user) {
-        res.status(404).send({ error });
-      } else {
-        
-        user.email = emailToDecrypt;
-        res.status(200).json(user, hateoasLinks(req, User._id));
-
+        res.status(404).send("user not find");
       }
-
+      user.email=decryptString(user.email)
+        res.status(200).json(user, hateoasLinks(req, user._id));
     })
-    .catch((error) => res.status(500).json({ error }));
+    .catch((error) => console.log(error));
 };
 
+
 exports.updateUserAccount = (req, res, next) => {
-  
+//Si j'ai un email alors je l'eno
 };
 
 

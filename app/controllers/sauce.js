@@ -96,7 +96,7 @@ exports.likeSauce = (req, res, next) => {
                 return res.status(200).json(newSauce, hateoasLinks(req, sauce._id));
               })
               .catch((error) => {
-                return res.status(400).json({ error: error });
+                return res.status(400).json({ message: error });
               });
           } else {
             res.status(200).json("User already dislike the sauce");
@@ -120,7 +120,7 @@ exports.likeSauce = (req, res, next) => {
                 res.status(200).json(newSauce, hateoasLinks(req, sauce._id));
               })
               .catch((error) => {
-                res.status(400).json({ error: error });
+                res.status(400).json({ message: error });
               });
           }
           if (sauce["usersDisliked"].includes(req.auth.userID)) {
@@ -137,7 +137,7 @@ exports.likeSauce = (req, res, next) => {
                 res.status(200).json(newSauce, hateoasLinks(req, sauce._id));
               })
               .catch((error) => {
-                res.status(400).json({ error: error });
+                res.status(400).json({ message: error });
               });
           }
           if (!sauce["usersDisliked"].includes(req.auth.userID) || !sauce["usersLiked"].includes(req.auth.userID) ) {
@@ -164,8 +164,7 @@ exports.likeSauce = (req, res, next) => {
                 return res.status(200).json(newSauce, hateoasLinks(req, sauce._id));
               })
               .catch((error) => {
-                console.log(error);
-                return res.status(400).json({ error: error });
+                return res.status(400).json({ message: error });
               });
           } else {
             res.status(200).json("User already like the sauce");
