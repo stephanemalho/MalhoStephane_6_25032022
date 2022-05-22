@@ -2,24 +2,35 @@ const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
 
 const userSchema = mongoose.Schema({
-  email: 
+    email: 
     { 
       type: String, 
       required: [true, "Champ requis"], 
-      lowercase: true, 
       unique: true,
       trim: true,
       maxlength: 64
     },
-  password: 
-    { type: String, 
+    password: 
+    { 
+      type: String, 
       required: [true, "Mot de passe requis"],
       trim: true,
       minLength: [6, "Le mot de passe doit contenir au mois 6 caractères"],
       minNumbers: 1,
       minLowercase: 1,
       minUppercase: 1
-    }
+    },
+    reports: 
+    { 
+      type: Number, 
+      default: 0 
+    },
+    userWhoReported: 
+    [{ 
+      type: String,
+      ref: "User" 
+    }]
+    
 });
 
 userSchema.plugin(uniqueValidator, {message: 'Éxiste déja.'});

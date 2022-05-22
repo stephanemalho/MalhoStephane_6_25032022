@@ -1,11 +1,15 @@
 
 const express = require("express"); // import express
 const cors = require("cors"); // import cors
-const app = express();
+const app = express(); 
 module.exports = "dotenv"; // export dotenv
 require("./app/config/db.config");
-
+const hateoasLinker = require("express-hateoas-links");
 const path = require('path');
+
+
+// add hateoas links
+app.use(hateoasLinker); 
 
 // parse requests of content-type - application/json
 app.use(express.json()); 
@@ -16,6 +20,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS'); // allow methods   
   next();
 }); 
+
 
 // allow cors 
 var corsOptions = {
