@@ -2,9 +2,15 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const CryptoJS = require("crypto-js");
+const fs = require("fs");
+const Sauce = require("../models/sauce");
 
+
+/*****************************************************************
+ *****************  ENCRYPT THE USER EMAIL   ********************* 
+ *****************************************************************/
 function encryptString(content) {
-  const parsedkey = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE);
+  const parsedkey = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE); // PASSPHRASE in .env exemple folder
   const iv = CryptoJS.enc.Utf8.parse(process.env.IV);
   const encrypted = CryptoJS.AES.encrypt(content, parsedkey, {
     iv: iv,
@@ -14,8 +20,11 @@ function encryptString(content) {
   return encrypted.toString();
 }
 
+/*****************************************************************
+ *****************  DECRYPT THE USER EMAIL   ********************* 
+ *****************************************************************/
 function decryptString(word) {
-  var keys = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE);
+  var keys = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE); // PASSPHRASE in .env exemple folder
   let base64 = CryptoJS.enc.Base64.parse(word);
   let src = CryptoJS.enc.Base64.stringify(base64);
   var decrypt = CryptoJS.AES.decrypt(src, keys, {
@@ -25,9 +34,10 @@ function decryptString(word) {
   return decrypt.toString(CryptoJS.enc.Utf8);
 }
 
-const test = encryptString("test");
-console.log(decryptString(test));
 
+/*****************************************************************
+ *****************     USER SIGNIN           ********************* 
+ *****************************************************************/
 exports.signup = (req, res, next) => {
   bcrypt
     .hash(req.body.password, 10) // hash the password
@@ -51,6 +61,10 @@ exports.signup = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
+
+/*****************************************************************
+ *****************     USER LOGING           ********************* 
+ *****************************************************************/
 exports.login = (req, res, next) => {
   const emailEncrypted = encryptString(req.body.email);
   User.findOne({ email: emailEncrypted })
@@ -80,6 +94,10 @@ exports.login = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
+
+/*****************************************************************
+ *****************     DELETE THE USER       ********************* 
+ *****************************************************************/
 exports.deleteUser = (req, res, next) => {
   User.findOneAndDelete({ userId: req.auth.userID }) // find the user and delete it
     .then(() => {
@@ -90,7 +108,9 @@ exports.deleteUser = (req, res, next) => {
     ); // if not found
 };
 
-// report user
+/*****************************************************************
+ *****************     REPORT THE USER       ********************* 
+ *****************************************************************/
 exports.reportUser = (req, res, next) => {
   User.findById(req.params.id)
     .then((user) => {
@@ -116,6 +136,10 @@ exports.reportUser = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
+
+/*****************************************************************
+ *****************  READ THE USER SETUP      ********************* 
+ *****************************************************************/
 exports.readUser = (req, res, next) => {
   User.findOne({ _id: req.auth.userID })
     .then((user) => {
@@ -128,10 +152,61 @@ exports.readUser = (req, res, next) => {
     .catch((error) => console.log(error));
 };
 
-exports.updateUserAccount = (req, res, next) => {
-  //Si j'ai un email alors je l'eno
+
+/*****************************************************************
+ *****************  UPDATE THE USER SETUP    ********************* 
+ *****************************************************************/
+exports.updateUser = async (req, res) => {
+  const checkBeforeUpdate = { _id: req.auth.userID }; // check if the user is the same
+  const update = {};
+  const emailEncrypted = encryptString(req.body.email);
+  User.findOne({ email: emailEncrypted })
+  if (req.body.password) {
+    const hash = await bcrypt.hash(req.body.password, 10);
+    update.password = hash;
+  }
+  if (req.body.email) {
+    update.email = emailEncrypted;
+  }
+  User.findOneAndUpdate(checkBeforeUpdate, update, { // update the changes for the user
+    returnOriginal: true,
+    updatedExisting: true,
+  })
+    .then((user) => {
+      res.status(201).json(user, hateoasLinks(req));
+    })
+    .catch((error) => res.status(400).json({ error }));
 };
 
+
+/*****************************************************************
+ *****************  EXPORT THE USER DATA     ********************* 
+ *****************************************************************/
+exports.exportData = (req, res) => {
+  
+  User.findOne({ _id: req.auth.userID })
+    .then(user => {
+      // If user not found, return an error
+      if (!user) {
+        return res
+          .status(401)
+          .json({ error: "Utilisateur introuvable." });
+      }
+      // Decrypt email
+      user.email = decryptString(user.email);
+
+      var text = user.toString();
+      res.attachment('user-datas.txt');
+      res.type('txt');
+      return res.status(200).send(text);
+    })
+    .catch((error) => res.status(500).json({ error }));
+};
+
+
+/*****************************************************************
+ *****************  API RESTFULL USER SETUP  ********************* 
+ *****************************************************************/
 const hateoasLinks = (req, id) => {
   const URI = `${req.protocol}://${req.get("host") + "/api/auth"}`;
   return [
@@ -177,5 +252,17 @@ const hateoasLinks = (req, id) => {
       href: URI,
       method: "GET",
     },
+    {
+      rel: "updateUserInfo",
+      title: "UpdateUserInfo",
+      href: URI,
+      method: "PUT",
+    },
+    {
+      rel: "exportUser",
+      title: "ExportUser",
+      href: URI + "/export",
+      method: "GET",
+    }
   ];
 };

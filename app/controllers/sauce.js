@@ -1,67 +1,78 @@
 const Sauce = require("../models/sauce"); // import the sauce model
 const fs = require("fs"); // file system
 
-// get one sauce
+
+/*****************************************************************
+ *****************  READ ONE SAUCE BY ID     ********************* 
+ *****************************************************************/
 exports.readSauce = (req, res, next) => {
-  Sauce.findOne({ _id: req.params.id }) // find the sauce
+  Sauce.findOne({ _id: req.params.id }) // find the sauce its object ID
     .then((sauce) => {
       sauce.imageUrl = `${req.protocol}://${req.get("host")}/` + sauce.imageUrl; // add the image url
-      res.status(200).json(sauce, hateoasLinks(req, req.params.id)); // send the sauce
-    }) // find the sauce
-    .catch((error) => res.status(404).json({ error: "Sauce not found" })); // if not found
+      res.status(200).json(sauce, hateoasLinks(req, req.params.id));
+    }) 
+    .catch((error) => res.status(404).json({ error: "Sauce not found" })); 
 };
 
-// get all the sauces
+/*****************************************************************
+ *****************  GET ALL SAUCES           ********************* 
+ *****************************************************************/
 exports.readAllSauces = (req, res, next) => {
-  Sauce.find()
+  Sauce.find()  // find all the sauces
     .then((sauces) => {
       sauces = sauces.map((sauce) => {
         sauce.imageUrl =
-          `${req.protocol}://${req.get("host")}/` + sauce.imageUrl; // add image url
+          `${req.protocol}://${req.get("host")}/` + sauce.imageUrl; 
         const hateoasLink = hateoasLinks(req, sauce._id);
         return { ...sauce._doc, hateoasLink };
       });
-      res.status(200).json(sauces, hateoasLinks(req, sauces._id)); // send the sauces
-    }) // send the sauces
-    .catch((error) => res.status(400).json({ error })); // if not found
+      res.status(200).json(sauces, hateoasLinks(req, sauces._id));
+    }) 
+    .catch((error) => res.status(400).json({ error })); 
 };
 
-// create the sauce
+/*****************************************************************
+ *****************  CREATE A SAUCE           ********************* 
+ *****************************************************************/
 exports.createSauce = (req, res, next) => {
   const sauceObject = JSON.parse(req.body.sauce); // get the sauce object
-  delete sauceObject._id; // delete the _id
+  delete sauceObject._id; 
   const sauce = new Sauce({
-    ...sauceObject, // add the sauce object
+    ...sauceObject, 
     imageUrl: `images/${
       req.file.filename 
     }`,
   }); // create a new sauce
   sauce
     .save() // save the sauce
-    .then(() => res.status(201).json(sauce, hateoasLinks(req, sauce._id))) // if ok send a message
-    .catch((error) => res.status(400).json({ error })); // if not send the error
+    .then(() => res.status(201).json(sauce, hateoasLinks(req, sauce._id))) 
+    .catch((error) => res.status(400).json({ error })); 
 };
 
-// update the sauce
+/*****************************************************************
+ *****************  UPDATING A SAUCE         ********************* 
+ *****************************************************************/
 exports.updateSauce = (req, res, next) => {
-  const sauceObject = req.file
+  const sauceObject = req.file // get the file
     ? {
         ...JSON.parse(req.body.sauce),
-        imageUrl: `images/${req.file.filename}`,
+        imageUrl: `images/${req.file.filename}`, 
       }
-    : { ...req.body }; // if there is a file, add the image url
+    : { ...req.body };  
   Sauce.findOneAndUpdate({ _id: req.params.id }, sauceObject, { new: true }) // update the sauce
     .then((sauce) => res.status(200).json(sauce, hateoasLinks(req, sauce._id)))
     .catch((error) => res.status(400).json({ error: error }));
 };
 
-// delete the sauce
+/*****************************************************************
+ *****************  DELETING A SAUCE BY ITS ID ******************* 
+ *****************************************************************/
 exports.deleteSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id }) // find the sauce
     .then((sauce) => {
-      const filename = sauce.imageUrl.split("/images/")[1]; // get the filename
+      const filename = sauce.imageUrl.split("/images/")[1]; 
       fs.unlink(`images/${filename}`, () => {
-        Sauce.deleteOne({ _id: req.params.id })
+        Sauce.deleteOne({ _id: req.params.id }) // delete the sauce
           .then(() => res.status(204).send())
           .catch((error) => res.status(400).json({ error }));
       });
@@ -69,10 +80,11 @@ exports.deleteSauce = (req, res, next) => {
     .catch((error) => res.status(404).json({ error }));
 };
 
-//likes methods
+/*****************************************************************
+ *****************  LIKE OR DISLIKE A SAUCE  ********************* 
+ *****************************************************************/
 exports.likeSauce = (req, res, next) => {
-  Sauce.findById(req.params.id) // find the sauce
-    //Sauce.findOne({ _id: req.params.id })
+  Sauce.findById(req.params.id) 
     .then((sauce) => {
       let toChange = {};
       switch (req.body.like) {
@@ -177,11 +189,13 @@ exports.likeSauce = (req, res, next) => {
     .catch();
 };
 
-// report sauce
+/*****************************************************************
+ ***************** REPORT A SAUCE            ********************* 
+ *****************************************************************/
 exports.reportSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
-      if (!sauce["usersWhoReportedTheSauce"].includes(req.auth.userID)) {
+      if (!sauce["usersWhoReportedTheSauce"].includes(req.auth.userID)) { // if the user hasn't already reported the sauce
         Sauce.findByIdAndUpdate(
           { _id: req.params.id },
           {
@@ -197,14 +211,16 @@ exports.reportSauce = (req, res, next) => {
             return res.status(400).json({ error: error });
           });
       } else {
-        res.status(404).json({ error: "No sauce to report" });
+        res.status(404).json({ error: "No sauce to report" }); // if the user has already reported the sauce or there is no sauce
       }
     })
     .catch((error) => res.status(500).json({ error }, console.log(error)));
 };
 
 
-// hateoas links
+/*****************************************************************
+ *****************  API RESTFULL SAUCE SETUP ********************* 
+ *****************************************************************/
 const hateoasLinks = (req, id) => {
   const URI = req.protocol + "://" + req.get("host");
   return [
