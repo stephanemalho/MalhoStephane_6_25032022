@@ -76,7 +76,7 @@ exports.login = (req, res, next) => {
         .compare(req.body.password, user.password) // compare the password
         .then((valid) => {
           if (!valid) {
-            return res.status(401).json({ error: "Mot de passe incorrect !" });
+            return res.status(403).json({ error: "Mot de passe incorrect !" });
           }
           user.email = decryptString(user.email);
 
@@ -89,7 +89,7 @@ exports.login = (req, res, next) => {
             hateoasLinks: hateoasLinks(req),
           });
         })
-        .catch((error) => res.status(500).json({ error }));
+        .catch((error) => res.status(401).json({ error }));
     })
     .catch((error) => res.status(500).json({ error }));
 };
@@ -104,7 +104,7 @@ exports.deleteUser = (req, res, next) => {
       res.status(200).json({ message: "User deleted" });
     }) // send the response and the user
     .catch((error) =>
-      res.status(404).json({ error: "User not found" + error })
+      res.status(401).json({ error: "User not found" + error })
     ); // if not found
 };
 
@@ -124,13 +124,13 @@ exports.reportUser = (req, res, next) => {
           { new: true }
         )
           .then((newUser) => {
-            return res.status(200).json(newUser, hateoasLinks(req, User._id));
+            return res.status(201).json(newUser, hateoasLinks(req, User._id));
           })
           .catch((error) => {
-            return res.status(400).json({ error: error });
+            return res.status(401).json({ error: error });
           });
       } else {
-        res.status(404).json({ error: "User not found or already reported" });
+        res.status(403).json({ error: "User not found or already reported" });
       }
     })
     .catch((error) => res.status(500).json({ error }));
@@ -144,7 +144,7 @@ exports.readUser = (req, res, next) => {
   User.findOne({ _id: req.auth.userID })
     .then((user) => {
       if (!user) {
-        res.status(404).send("user not find");
+        res.status(403).send("user not find");
       }
       user.email = decryptString(user.email);
       res.status(200).json(user, hateoasLinks(req, user._id));
@@ -175,7 +175,7 @@ exports.updateUser = async (req, res) => {
     .then((user) => {
       res.status(201).json(user, hateoasLinks(req));
     })
-    .catch((error) => res.status(400).json({ error }));
+    .catch((error) => res.status(403).json({ error }));
 };
 
 
