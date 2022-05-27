@@ -124,7 +124,7 @@ exports.reportUser = (req, res, next) => {
           { new: true }
         )
           .then((newUser) => {
-            return res.status(201).json(newUser, hateoasLinks(req, User._id));
+            return res.status(201).json(newUser, hateoasLinks(req, newUser._id));
           })
           .catch((error) => {
             return res.status(401).json({ error: error });
@@ -144,7 +144,7 @@ exports.readUser = (req, res, next) => {
   User.findOne({ _id: req.auth.userID })
     .then((user) => {
       if (!user) {
-        res.status(403).send("user not find");
+        res.status(404).send("User not found");
       }
       user.email = decryptString(user.email);
       res.status(200).json(user, hateoasLinks(req, user._id));
@@ -157,23 +157,21 @@ exports.readUser = (req, res, next) => {
  *****************  UPDATE THE USER SETUP    ********************* 
  *****************************************************************/
 exports.updateUser = async (req, res) => {
-  const checkBeforeUpdate = { _id: req.auth.userID }; // check if the user is the same
   const update = {};
-  const emailEncrypted = encryptString(req.body.email);
-  User.findOne({ email: emailEncrypted })
   if (req.body.password) {
     const hash = await bcrypt.hash(req.body.password, 10);
     update.password = hash;
   }
   if (req.body.email) {
-    update.email = emailEncrypted;
+    update.email = encryptString(req.body.email);
   }
-  User.findOneAndUpdate(checkBeforeUpdate, update, { // update the changes for the user
+  User.findOneAndUpdate({ _id: req.auth.userID }, update, { // update the changes for the user
     returnOriginal: true,
     updatedExisting: true,
   })
     .then((user) => {
-      res.status(201).json(user, hateoasLinks(req));
+      user.email = decryptString(user.email);
+      res.status(201).json(user, hateoasLinks(req, user._id));
     })
     .catch((error) => res.status(403).json({ error }));
 };
@@ -183,18 +181,16 @@ exports.updateUser = async (req, res) => {
  *****************  EXPORT THE USER DATA     ********************* 
  *****************************************************************/
 exports.exportData = (req, res) => {
-  
   User.findOne({ _id: req.auth.userID })
     .then(user => {
       // If user not found, return an error
       if (!user) {
         return res
-          .status(401)
-          .json({ error: "Utilisateur introuvable." });
+          .status(404)
+          .json({ error: "User not found." });
       }
       // Decrypt email
       user.email = decryptString(user.email);
-
       var text = user.toString();
       res.attachment('user-datas.txt');
       res.type('txt');

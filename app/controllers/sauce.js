@@ -1,10 +1,8 @@
 const Sauce = require("../models/sauce"); // import the sauce model
 const fs = require("fs"); // file system
 
-
-
 /*****************************************************************
- *****************  READ SAUCE BY ITS ID     ********************* 
+ *****************  READ SAUCE BY ITS ID     *********************
  *****************************************************************/
 exports.readSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id }) // find the sauce
@@ -16,7 +14,7 @@ exports.readSauce = (req, res, next) => {
 };
 
 /*****************************************************************
- *****************  READ ALL THE SAUCES      ********************* 
+ *****************  READ ALL THE SAUCES      *********************
  *****************************************************************/
 exports.readAllSauces = (req, res, next) => {
   Sauce.find()
@@ -33,7 +31,7 @@ exports.readAllSauces = (req, res, next) => {
 };
 
 /*****************************************************************
- *****************  CREATE ONE SAUCE         ********************* 
+ *****************  CREATE ONE SAUCE         *********************
  *****************************************************************/
 exports.createSauce = (req, res, next) => {
   const sauceObject = JSON.parse(req.body.sauce); // get the sauce object
@@ -49,7 +47,7 @@ exports.createSauce = (req, res, next) => {
 };
 
 /*****************************************************************
- *****************  UPDATE ELEMENT IN  SAUCE    ****************** 
+ *****************  UPDATE ELEMENT IN  SAUCE    ******************
  *****************************************************************/
 exports.updateSauce = (req, res, next) => {
   const sauceObject = req.file
@@ -58,13 +56,24 @@ exports.updateSauce = (req, res, next) => {
         imageUrl: `images/${req.file.filename}`,
       }
     : { ...req.body }; // if there is a file, add the image url
+  Sauce.findOne({ _id: req.params.id })
+    .then((sauce) => {
+      try {
+        if (sauceObject.imageUrl) {
+          fs.unlinkSync(sauce.imageUrl.splice(1));
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    })
+    .catch((error) => res.status(500).json({ error: error }));
   Sauce.findOneAndUpdate({ _id: req.params.id }, sauceObject, { new: true }) // update the sauce
     .then((sauce) => res.status(201).json(sauce, hateoasLinks(req, sauce._id)))
-    .catch((error) => res.status(403).json({ error: error }));
+    .catch((error) => res.status(500).json({ error: error }));
 };
 
 /*****************************************************************
- *****************  DELETE THE SAUCE         ********************* 
+ *****************  DELETE THE SAUCE         *********************
  *****************************************************************/
 exports.deleteSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id }) // find the sauce
@@ -80,12 +89,12 @@ exports.deleteSauce = (req, res, next) => {
 };
 
 /*****************************************************************
- *****************  LIKE OR DISLIKE A SAUCE    ******************* 
+ *****************  LIKE OR DISLIKE A SAUCE    *******************
  *****************  AND SEND THE USER ID       *******************
  *****************  OF THE LIKER OR DISLIKER   *******************
  *****************  TO THE LIKED USER DB       *******************
  *****************************************************************/
-exports.likeSauce = async (req, res, next) => {
+exports.likeSauce = (req, res, next) => {
   try {
     Sauce.findById(req.params.id).then((sauce) => {
       let toChange = {};
@@ -155,7 +164,7 @@ exports.likeSauce = async (req, res, next) => {
               });
           }
           if (
-            !sauce["usersDisliked"].includes(req.auth.userID) ||
+            !sauce["usersDisliked"].includes(req.auth.userID) &&
             !sauce["usersLiked"].includes(req.auth.userID)
           ) {
             res
@@ -198,9 +207,8 @@ exports.likeSauce = async (req, res, next) => {
   }
 };
 
-
 /*****************************************************************
- *****************  REPORT THE SAUCE         ********************* 
+ *****************  REPORT THE SAUCE         *********************
  *****************************************************************/
 exports.reportSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
@@ -215,7 +223,9 @@ exports.reportSauce = (req, res, next) => {
           { new: true }
         )
           .then((newSauce) => {
-            return res.status(201).json(newSauce, hateoasLinks(req, sauce._id));
+            return res
+              .status(201)
+              .json(newSauce, hateoasLinks(req, newSauce._id));
           })
           .catch((error) => {
             return res.status(400).json({ error: error });
