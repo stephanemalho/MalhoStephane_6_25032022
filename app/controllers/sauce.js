@@ -8,9 +8,9 @@ exports.readSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id }) // find the sauce
     .then((sauce) => {
       sauce.imageUrl = `${req.protocol}://${req.get("host")}/` + sauce.imageUrl; // add the image url
-      res.status(200).json(sauce, hateoasLinks(req, req.params.id)); // send the sauce
-    }) // find the sauce
-    .catch((error) => res.status(404).json({ error: "Sauce not found" })); // if not found
+      res.status(200).json(sauce, hateoasLinks(req, req.params.id)); // ok
+    }) 
+    .catch((error) => res.status(404).json({ error: "Sauce not found" })); // not found
 };
 
 /*****************************************************************
@@ -25,9 +25,9 @@ exports.readAllSauces = (req, res, next) => {
         const hateoasLink = hateoasLinks(req, sauce._id);
         return { ...sauce._doc, hateoasLink };
       });
-      res.status(200).json(sauces, hateoasLinks(req, sauces._id)); // send the sauces
-    }) // send the sauces
-    .catch((error) => res.status(404).json({ error })); // if not found
+      res.status(200).json(sauces, hateoasLinks(req, sauces._id)); // ok
+    }) 
+    .catch((error) => res.status(404).json({ error })); // not found
 };
 
 /*****************************************************************
@@ -39,11 +39,12 @@ exports.createSauce = (req, res, next) => {
   const sauce = new Sauce({
     ...sauceObject, // add the sauce object
     imageUrl: `images/${req.file.filename}`,
+    userId : req.auth.userID,
   }); // create a new sauce
   sauce
     .save() // save the sauce
-    .then(() => res.status(201).json(sauce, hateoasLinks(req, sauce._id))) // if ok send a message
-    .catch((error) => res.status(403).json({ error })); // if not send the error
+    .then(() => res.status(201).json(sauce, hateoasLinks(req, sauce._id))) // created
+    .catch((error) => res.status(403).json({ error })); // forbidden
 };
 
 /*****************************************************************
@@ -60,16 +61,16 @@ exports.updateSauce = (req, res, next) => {
     .then((sauce) => {
       try {
         if (sauceObject.imageUrl) {
-          fs.unlinkSync(sauce.imageUrl.splice(1));
+          fs.unlinkSync(sauce.imageUrl);
         }
       } catch (error) {
         console.log(error);
       }
     })
-    .catch((error) => res.status(500).json({ error: error }));
-  Sauce.findOneAndUpdate({ _id: req.params.id }, sauceObject, { new: true }) // update the sauce
-    .then((sauce) => res.status(201).json(sauce, hateoasLinks(req, sauce._id)))
-    .catch((error) => res.status(500).json({ error: error }));
+    .catch((error) => res.status(403).json({ error: error })); // forbidden
+  Sauce.findOneAndUpdate({ _id: req.params.id }, sauceObject, { new: true }) 
+    .then((sauce) => res.status(201).json(sauce, hateoasLinks(req, sauce._id))) // created
+    .catch((error) => res.status(500).json({ error: error })); // Internal Server Error
 };
 
 /*****************************************************************
@@ -78,15 +79,15 @@ exports.updateSauce = (req, res, next) => {
 exports.deleteSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id }) // find the sauce
     .then((sauce) => {
-      const filename = sauce.imageUrl.split("/images/")[1]; // get the filename
-      fs.unlink(`images/${filename}`, () => {
+      fs.unlink(sauce.imageUrl , () => {
         Sauce.deleteOne({ _id: req.params.id })
-          .then(() => res.status(204).send())
-          .catch((error) => res.status(403).json({ error }));
+          .then(() => res.status(204).send()) // no content
+          .catch((error) => res.status(403).json({ error })); // forbidden
       });
     })
-    .catch((error) => res.status(404).json({ error }));
+    .catch((error) => res.status(500).json({ error })); // Internal Server Error 
 };
+
 
 /*****************************************************************
  *****************  LIKE OR DISLIKE A SAUCE    *******************
@@ -116,13 +117,13 @@ exports.likeSauce = (req, res, next) => {
               new: true,
             })
               .then((newSauce) => {
-                res.status(201).json(newSauce, hateoasLinks(req, sauce._id));
+                res.status(201).json(newSauce, hateoasLinks(req, sauce._id)); // created
               })
               .catch((error) => {
-                res.status(400).json({ message: error });
+                res.status(403).json({ message: error }); // forbidden
               });
           } else {
-            res.status(204).json({ message: "User already dislike the sauce" });
+            res.status(204).json({ message: "User already dislike the sauce" }); // no content
           }
 
           break;
@@ -138,10 +139,10 @@ exports.likeSauce = (req, res, next) => {
               { new: true }
             )
               .then((newSauce) => {
-                res.status(201).json(newSauce, hateoasLinks(req, sauce._id));
+                res.status(201).json(newSauce, hateoasLinks(req, sauce._id)); // created
               })
               .catch((error) => {
-                res.status(400).json({ message: error });
+                res.status(403).json({ message: error }); // forbidden
               });
           }
           if (sauce["usersDisliked"].includes(req.auth.userID)) {
@@ -156,7 +157,7 @@ exports.likeSauce = (req, res, next) => {
             )
               .then((newSauce) => {
                 return res
-                  .status(201)
+                  .status(201) // created
                   .json(newSauce, hateoasLinks(req, sauce._id));
               })
               .catch((error) => {
@@ -168,7 +169,7 @@ exports.likeSauce = (req, res, next) => {
             !sauce["usersLiked"].includes(req.auth.userID)
           ) {
             res
-              .status(201)
+              .status(204) // no content
               .json({ message: "Don't need to dislike or undislike" });
           }
           break;
@@ -189,21 +190,21 @@ exports.likeSauce = (req, res, next) => {
               new: true,
             })
               .then((newSauce) => {
-                res.status(201).json(newSauce, hateoasLinks(req, sauce._id));
+                res.status(201).json(newSauce, hateoasLinks(req, sauce._id)); // created
               })
               .catch((error) => {
-                res.status(400).json({ message: error });
+                res.status(403).json({ message: error }); // forbidden
               });
           } else {
-            res.status(204).json({ message: "User already like the sauce" });
+            res.status(204).json({ message: "User already like the sauce" }); // no content
           }
           break;
         default:
-          res.status(400).json({ message: "Bad request" });
+          res.status(404).json({ message: "Bad request" }); // not found
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error });
+    res.status(500).json({ message: error }); // Internal Server Error
   }
 };
 
