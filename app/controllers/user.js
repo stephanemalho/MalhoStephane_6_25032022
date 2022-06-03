@@ -49,12 +49,12 @@ exports.signup = (req, res, next) => {
       });
       user
         .save() // save the user
-        .then(() =>
+        .then((newUser) =>
           res
             .status(201) // created
-            .json({ message: "Utilisateur créé" }, user, hateoasLinks(req))
+            .json({ message: "User created", user: newUser },  hateoasLinks(req, newUser._id))
         )
-        .catch((error) => res.status(422).json({ error })); // Unprocessable Entity
+        .catch((error) => res.status(400).json({ error })); // bad request
     })
     .catch((error) => res.status(500).json({ error })); // Internal Server Error
 };
@@ -73,7 +73,7 @@ exports.login = (req, res, next) => {
         .compare(req.body.password, user.password) // compare the password
         .then((valid) => {
           if (!valid) {
-            return res.status(403).json({ error: "Mot de passe incorrect !" }); // Forbidden
+            return res.status(401).json({ error: "Mot de passe incorrect !" }); // Unauthorized
           }
           user.email = decryptString(user.email);
           res.status(200).json({
@@ -83,10 +83,10 @@ exports.login = (req, res, next) => {
               expiresIn: "24h",
             }),
             User: user,
-            hateoasLinks: hateoasLinks(req),
+            hateoasLinks: hateoasLinks(req, user._id),
           });
         })
-        .catch((error) => res.status(404).json({ error })); // not found
+        .catch((error) => res.status(500).json({ error })); // Internal Server Error
     })
     .catch((error) => res.status(500).json({ error })); // Internal Server Error
 };
@@ -203,6 +203,7 @@ exports.exportData = (req, res) => {
     .catch((error) => res.status(500).json({ error })); // Internal Server Error
 };
 
+
 /*****************************************************************
  *****************  API RESTFULL USER SETUP  *********************
  *****************************************************************/
@@ -256,12 +257,6 @@ const hateoasLinks = (req, id) => {
       title: "UpdateUserInfo",
       href: URI,
       method: "PUT",
-    },
-    {
-      rel: "exportUser",
-      title: "ExportUser",
-      href: URI + "/export",
-      method: "GET",
-    },
+    }
   ];
 };
