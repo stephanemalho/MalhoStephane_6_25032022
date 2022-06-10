@@ -10,7 +10,7 @@ router.post(
   "/signup",
   [
     body("email", "Format incorrect").trim().isEmail().normalizeEmail(),
-    body("password", "Format incorrect").trim().isLength({ min: 6 , max: 64}),// trim must be before isEmail
+    body("password", "Format incorrect").trim().isLength({ min: 6 , max: 64}), // trim must be before isEmail
   ], 
   validationResultExpress,
   userCtrl.signup
