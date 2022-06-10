@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+//This sauce schema contain the userID, name, url, manufacturer, description, main pepper,imageUrl, heat, likes, dislikes, user who like or dislike, and RGPD report + reporter ID.
 const sauceSchema = mongoose.Schema({
   userId: 
     { 
@@ -71,4 +72,4 @@ const sauceSchema = mongoose.Schema({
 
 
 
-module.exports = mongoose.model("Sauce", sauceSchema);
+module.exports = mongoose.model("Sauce", sauceSchema); // better call Sauce 

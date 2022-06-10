@@ -2,12 +2,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const CryptoJS = require("crypto-js");
-const fs = require("fs");
-const Sauce = require("../models/sauce");
 
 
 /*****************************************************************
- *****************  ENCRYPT THE USER EMAIL   ********************* 
+ *****************  ENCRYPT THE USER EMAIL   *********************
  *****************************************************************/
 function encryptString(content) {
   const parsedkey = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE); // PASSPHRASE in .env exemple folder
@@ -21,7 +19,7 @@ function encryptString(content) {
 }
 
 /*****************************************************************
- *****************  DECRYPT THE USER EMAIL   ********************* 
+ *****************  DECRYPT THE USER EMAIL   *********************
  *****************************************************************/
 function decryptString(word) {
   var keys = CryptoJS.enc.Utf8.parse(process.env.PASSPHRASE); // PASSPHRASE in .env exemple folder
@@ -34,9 +32,8 @@ function decryptString(word) {
   return decrypt.toString(CryptoJS.enc.Utf8);
 }
 
-
 /*****************************************************************
- *****************     USER SIGNIN           ********************* 
+ *****************     USER SIGNIN           *********************
  *****************************************************************/
 exports.signup = (req, res, next) => {
   bcrypt
@@ -51,65 +48,66 @@ exports.signup = (req, res, next) => {
       });
       user
         .save() // save the user
-        .then(() =>
+        .then((newUser) =>
           res
-            .status(201)
-            .json({ message: "Utilisateur créé" }, user, hateoasLinks(req))
+            .status(201) // created
+            .json({ message: "User created", user: newUser },  hateoasLinks(req, newUser._id))
         )
-        .catch((error) => res.status(422).json({ error }));
-    })
-    .catch((error) => res.status(500).json({ error }));
+        .catch((error) => res.status(400).json({ error })); // bad request
+    }) 
+    .catch((error) => res.status(500).json({ error })); // Internal Server Error
 };
 
-
 /*****************************************************************
- *****************     USER LOGING           ********************* 
+ *****************     USER LOGING           *********************
  *****************************************************************/
 exports.login = (req, res, next) => {
   const emailEncrypted = encryptString(req.body.email);
   User.findOne({ email: emailEncrypted })
     .then((user) => {
       if (!user) {
-        return res.status(404).json({ error: "Utilisateur non trouvé" });
+        return res.status(404).json({ error: "Utilisateur non trouvé" }); // Not found
       }
       bcrypt
         .compare(req.body.password, user.password) // compare the password
         .then((valid) => {
           if (!valid) {
-            return res.status(401).json({ error: "Mot de passe incorrect !" });
+            return res.status(401).json({ error: "Mot de passe incorrect !" }); // Unauthorized
           }
-          user.email = decryptString(user.email);
-
+          user.email = encryptString(user.email);
           res.status(200).json({
+            // OK
             userId: user._id,
             token: jwt.sign({ userId: user._id }, process.env.JWT_TOKEN, {
-              expiresIn: "24h",
+              expiresIn: 60 * 60 * 24,
             }),
             User: user,
-            hateoasLinks: hateoasLinks(req),
+            hateoasLinks: hateoasLinks(req, user._id),
           });
         })
-        .catch((error) => res.status(500).json({ error }));
+        .catch((error) => res.status(500).json({ error })); // Internal Server Error
     })
-    .catch((error) => res.status(500).json({ error }));
+    .catch((error) => res.status(500).json({ error })); // Internal Server Error
 };
 
-
 /*****************************************************************
- *****************     DELETE THE USER       ********************* 
+ *****************     DELETE THE USER       *********************
  *****************************************************************/
 exports.deleteUser = (req, res, next) => {
-  User.findOneAndDelete({ userId: req.auth.userID }) // find the user and delete it
-    .then(() => {
-      res.status(200).json({ message: "User deleted" });
-    }) // send the response and the user
-    .catch((error) =>
-      res.status(404).json({ error: "User not found" + error })
-    ); // if not found
+  User.findOneAndDelete({ _id: req.auth.userID }) // find the user and delete it
+    .then((user) => {
+      if (!user) {
+        res.status(404).send("User not found"); // not found
+      }
+      res.status(204).json({ message: "User deleted" }); // no content
+    })
+    .catch(
+      (error) => res.status(500).json({ error }) // Internal Server Error
+    );
 };
 
 /*****************************************************************
- *****************     REPORT THE USER       ********************* 
+ *****************     REPORT THE USER       *********************
  *****************************************************************/
 exports.reportUser = (req, res, next) => {
   User.findById(req.params.id)
@@ -124,88 +122,89 @@ exports.reportUser = (req, res, next) => {
           { new: true }
         )
           .then((newUser) => {
-            return res.status(200).json(newUser, hateoasLinks(req, User._id));
+            return res
+              .status(201)
+              .json(newUser, hateoasLinks(req, newUser._id)); // the report as been created
           })
           .catch((error) => {
-            return res.status(400).json({ error: error });
+            return res.status(403).json({ error: error }); // forbidden
           });
       } else {
-        res.status(404).json({ error: "User not found or already reported" });
+        res.status(404).json({ error: "User not found or already reported" }); // not found or already reported
       }
     })
-    .catch((error) => res.status(500).json({ error }));
+    .catch((error) => res.status(500).json({ error })); // Internal Server Error
 };
 
-
 /*****************************************************************
- *****************  READ THE USER SETUP      ********************* 
+ *****************  READ THE USER SETUP      *********************
  *****************************************************************/
 exports.readUser = (req, res, next) => {
   User.findOne({ _id: req.auth.userID })
     .then((user) => {
       if (!user) {
-        res.status(404).send("user not find");
+        res.status(404).send("User not found"); // not found
       }
       user.email = decryptString(user.email);
-      res.status(200).json(user, hateoasLinks(req, user._id));
+      res.status(200).json(user, hateoasLinks(req, user._id)); // OK
     })
     .catch((error) => console.log(error));
 };
 
-
 /*****************************************************************
- *****************  UPDATE THE USER SETUP    ********************* 
+ *****************  UPDATE THE USER SETUP    *********************
  *****************************************************************/
 exports.updateUser = async (req, res) => {
-  const checkBeforeUpdate = { _id: req.auth.userID }; // check if the user is the same
   const update = {};
-  const emailEncrypted = encryptString(req.body.email);
-  User.findOne({ email: emailEncrypted })
   if (req.body.password) {
     const hash = await bcrypt.hash(req.body.password, 10);
     update.password = hash;
   }
   if (req.body.email) {
-    update.email = emailEncrypted;
+    update.email = encryptString(req.body.email);
   }
-  User.findOneAndUpdate(checkBeforeUpdate, update, { // update the changes for the user
+  User.findOneAndUpdate({ _id: req.auth.userID }, update, {
+    // update the changes for the user
     returnOriginal: true,
     updatedExisting: true,
   })
     .then((user) => {
-      res.status(201).json(user, hateoasLinks(req));
+      if (!user) {
+        return res
+          .status(404) // not found
+          .json({ error: "User not found." });
+      }
+      user.email = decryptString(user.email);
+      res.status(201).json(user, hateoasLinks(req, user._id));
     })
-    .catch((error) => res.status(400).json({ error }));
+    .catch((error) => res.status(500).json({ error })); // Internal Server Error
 };
 
-
 /*****************************************************************
- *****************  EXPORT THE USER DATA     ********************* 
+ *****************  EXPORT THE USER DATA     *********************
  *****************************************************************/
 exports.exportData = (req, res) => {
-  
   User.findOne({ _id: req.auth.userID })
-    .then(user => {
+    .then((user) => {
       // If user not found, return an error
       if (!user) {
         return res
-          .status(401)
-          .json({ error: "Utilisateur introuvable." });
+          .status(404) // Not found
+          .json({ error: "User not found." });
       }
       // Decrypt email
       user.email = decryptString(user.email);
-
       var text = user.toString();
-      res.attachment('user-datas.txt');
-      res.type('txt');
-      return res.status(200).send(text);
+      res.attachment("user-datas.txt");
+      res.type("txt");
+      return res.status(200).send(text); // ok
     })
-    .catch((error) => res.status(500).json({ error }));
+    .catch((error) => res.status(500).json({ error })); // Internal Server Error
 };
 
 
 /*****************************************************************
- *****************  API RESTFULL USER SETUP  ********************* 
+ *****************  API RESTFULL USER SETUP  *********************
  *****************************************************************/
 const hateoasLinks = (req, id) => {
   const URI = `${req.protocol}://${req.get("host") + "/api/auth"}`;
@@ -257,12 +256,6 @@ const hateoasLinks = (req, id) => {
       title: "UpdateUserInfo",
       href: URI,
       method: "PUT",
-    },
-    {
-      rel: "exportUser",
-      title: "ExportUser",
-      href: URI + "/export",
-      method: "GET",
     }
   ];
 };
