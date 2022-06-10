@@ -2,8 +2,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const CryptoJS = require("crypto-js");
-const fs = require("fs");
-const Sauce = require("../models/sauce");
+
+
+
 
 /*****************************************************************
  *****************  ENCRYPT THE USER EMAIL   *********************
@@ -37,6 +38,10 @@ function decryptString(word) {
  *****************     USER SIGNIN           *********************
  *****************************************************************/
 exports.signup = (req, res, next) => {
+  // const errors = validationResult(req);
+  // if (!errors.isEmpty()) {
+  //   return res.status(400).json({ error: errors.array() }); // Bad Request from express-validator controller
+  // }
   bcrypt
     .hash(req.body.password, 10) // hash the password
     .then((hash) => {
@@ -55,7 +60,7 @@ exports.signup = (req, res, next) => {
             .json({ message: "User created", user: newUser },  hateoasLinks(req, newUser._id))
         )
         .catch((error) => res.status(400).json({ error })); // bad request
-    })
+    }) 
     .catch((error) => res.status(500).json({ error })); // Internal Server Error
 };
 
@@ -64,6 +69,10 @@ exports.signup = (req, res, next) => {
  *****************************************************************/
 exports.login = (req, res, next) => {
   const emailEncrypted = encryptString(req.body.email);
+  // const errors = validationResult(req);
+  // if (!errors.isEmpty()) {
+  //   return res.status(400).json({ error: errors.array() }); // Bad Request from express-validator controller
+  // }
   User.findOne({ email: emailEncrypted })
     .then((user) => {
       if (!user) {

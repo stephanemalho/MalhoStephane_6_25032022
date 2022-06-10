@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
 
+// basic shema for user containing email and password + rgpd reports and user reporter ID
 const userSchema = mongoose.Schema({
     email: 
     { 

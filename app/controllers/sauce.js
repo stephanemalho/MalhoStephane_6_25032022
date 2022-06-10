@@ -47,7 +47,6 @@ exports.createSauce = (req, res, next) => {
     .catch((error) => res.status(400).json({ error })); // bad request
 };
 
-
 /*****************************************************************
  *****************  UPDATE ELEMENT IN  SAUCE    ******************
  *****************************************************************/
@@ -133,7 +132,6 @@ exports.likeSauce = (req, res, next) => {
           } else {
             res.status(200).json({ message: "User already dislike the sauce" }); // ok
           }
-
           break;
         case 0:
           if (sauce["usersLiked"].includes(req.auth.userID)) {
@@ -248,7 +246,7 @@ exports.reportSauce = (req, res, next) => {
 
 // hateoas links
 const hateoasLinks = (req, id) => {
-  const URI = `${req.protocol + "://" + req.get("host") + "/api/sauces/"}` ;
+  const URI = `${req.protocol + "://" + req.get("host") + "/api/sauces/"}`;
   return [
     {
       rel: "readOne",
@@ -265,7 +263,7 @@ const hateoasLinks = (req, id) => {
     {
       rel: "create",
       method: "POST",
-      href: URI ,
+      href: URI,
       title: "Create a new sauce",
     },
     {
@@ -294,4 +292,3 @@ const hateoasLinks = (req, id) => {
     },
   ];
 };
-
