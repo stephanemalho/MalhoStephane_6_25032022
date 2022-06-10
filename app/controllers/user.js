@@ -4,8 +4,6 @@ const User = require("../models/user");
 const CryptoJS = require("crypto-js");
 
 
-
-
 /*****************************************************************
  *****************  ENCRYPT THE USER EMAIL   *********************
  *****************************************************************/
@@ -38,10 +36,6 @@ function decryptString(word) {
  *****************     USER SIGNIN           *********************
  *****************************************************************/
 exports.signup = (req, res, next) => {
-  // const errors = validationResult(req);
-  // if (!errors.isEmpty()) {
-  //   return res.status(400).json({ error: errors.array() }); // Bad Request from express-validator controller
-  // }
   bcrypt
     .hash(req.body.password, 10) // hash the password
     .then((hash) => {
@@ -69,10 +63,6 @@ exports.signup = (req, res, next) => {
  *****************************************************************/
 exports.login = (req, res, next) => {
   const emailEncrypted = encryptString(req.body.email);
-  // const errors = validationResult(req);
-  // if (!errors.isEmpty()) {
-  //   return res.status(400).json({ error: errors.array() }); // Bad Request from express-validator controller
-  // }
   User.findOne({ email: emailEncrypted })
     .then((user) => {
       if (!user) {
@@ -84,12 +74,12 @@ exports.login = (req, res, next) => {
           if (!valid) {
             return res.status(401).json({ error: "Mot de passe incorrect !" }); // Unauthorized
           }
-          user.email = decryptString(user.email);
+          user.email = encryptString(user.email);
           res.status(200).json({
             // OK
             userId: user._id,
             token: jwt.sign({ userId: user._id }, process.env.JWT_TOKEN, {
-              expiresIn: "24h",
+              expiresIn: 60 * 60 * 24,
             }),
             User: user,
             hateoasLinks: hateoasLinks(req, user._id),
