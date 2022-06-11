@@ -19,6 +19,9 @@ app.use(hateoasLinker);
 // parse requests in json format with:
 app.use(express.json());
 
+// To Reduce Fingerprinting disable x-powered-by header
+app.disable('x-powered-by'); 
+
 // header settings 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*"); // * means all origins are allowed to access the server
@@ -49,7 +52,6 @@ app.use(express.urlencoded({ extended: true }));
 // allowDots and replaceWith
 app.use(
   mongoSanitize({
-    allowDots: true,
     replaceWith: "_",
   })
 );
