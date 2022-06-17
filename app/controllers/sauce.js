@@ -27,7 +27,7 @@ exports.readAllSauces = (req, res, next) => {
       });
       res.status(200).json(sauces, hateoasLinks(req, sauces._id)); // ok
     })
-    .catch((error) => res.status(400).json({ error })); // not found
+    .catch((error) => res.status(400).json({ error })); // bad request
 };
 
 /*****************************************************************
@@ -145,10 +145,10 @@ exports.likeSauce = (req, res, next) => {
               { new: true }
             )
               .then((newSauce) => {
-                res.status(200).json(newSauce, hateoasLinks(req, sauce._id)); // created
+                res.status(200).json(newSauce, hateoasLinks(req, sauce._id)); // ok
               })
               .catch((error) => {
-                res.status(400).json({ error }); // forbidden
+                res.status(400).json({ error }); // bad request
               });
           }
           if (sauce["usersDisliked"].includes(req.auth.userID)) {
@@ -175,7 +175,7 @@ exports.likeSauce = (req, res, next) => {
             !sauce["usersLiked"].includes(req.auth.userID)
           ) {
             res
-              .status(200) // no content
+              .status(200) // ok
               .json({ message: "Don't need to dislike or undislike" });
           }
           break;
@@ -196,13 +196,13 @@ exports.likeSauce = (req, res, next) => {
               new: true,
             })
               .then((newSauce) => {
-                res.status(200).json(newSauce, hateoasLinks(req, sauce._id)); // created
+                res.status(200).json(newSauce, hateoasLinks(req, sauce._id)); // ok
               })
               .catch((error) => {
-                res.status(400).json({ error }); // forbidden
+                res.status(400).json({ error }); // bad request
               });
           } else {
-            res.status(200).json({ message: "User already like the sauce" }); // no content
+            res.status(200).json({ message: "User already like the sauce" }); // ok
           }
           break;
         default:
@@ -210,7 +210,7 @@ exports.likeSauce = (req, res, next) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error }); // Internal Server Error
+    res.status(404).json({ message: error }); // not found
   }
 };
 
@@ -231,17 +231,17 @@ exports.reportSauce = (req, res, next) => {
         )
           .then((newSauce) => {
             return res
-              .status(201)
+              .status(201) // created
               .json(newSauce, hateoasLinks(req, newSauce._id));
           })
           .catch((error) => {
-            return res.status(400).json({ error: error });
+            return res.status(400).json({ error: error }); // bad request
           });
       } else {
-        res.status(404).json({ error: "No sauce to report" });
+        res.status(404).json({ error: "No sauce to report" }); // not found
       }
     })
-    .catch((error) => res.status(404).json({ error }));
+    .catch((error) => res.status(404).json({ error })); // not found
 };
 
 // hateoas links

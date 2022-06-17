@@ -44,12 +44,12 @@ app.use(cors(corsOptions));
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
+
+
 // By default, $ and . characters are removed completely from user-supplied input in the following places:
 // req.body
 // req.params
 // req.headers
-// To remove data, I use these defaults:
-// allowDots and replaceWith
 app.use(
   mongoSanitize({
     replaceWith: "_",
