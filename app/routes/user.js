@@ -26,7 +26,11 @@ router.post(
 ); // login
 router.delete("/", auth, userCtrl.deleteUser); // delete a user
 router.get("/", auth, userCtrl.readUser); // get the user info
-router.put("/", auth, userCtrl.updateUser); // update a user account
+router.put("/", auth,  [
+  body("email", "Format incorrect").trim().isEmail().normalizeEmail(),
+  body("password", "Format incorrect").trim().isLength({ min: 6 , max: 64}),
+],
+validationResultExpress, userCtrl.updateUser); // update a user account
 router.post("/:id/report", auth, userCtrl.reportUser); // report the user
 router.get("/export-data", auth, userCtrl.exportData); // export the user')
 

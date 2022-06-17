@@ -79,7 +79,7 @@ exports.login = (req, res, next) => {
             // OK
             userId: user._id,
             token: jwt.sign({ userId: user._id }, process.env.JWT_TOKEN, {
-              expiresIn: 60 * 60 * 24,
+              expiresIn: 60 * 60 * 24, // 1 day
             }),
             User: user,
             hateoasLinks: hateoasLinks(req, user._id),
@@ -148,7 +148,7 @@ exports.readUser = (req, res, next) => {
       user.email = decryptString(user.email);
       res.status(200).json(user, hateoasLinks(req, user._id)); // OK
     })
-    .catch((error) => console.log(error));
+    .catch((error) => res.status(500).json({ error }));
 };
 
 /*****************************************************************
