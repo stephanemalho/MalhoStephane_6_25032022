@@ -3,18 +3,6 @@ const bunyan = require("bunyan");
 const colors = require("colors");
 require("dotenv").config();
 
-function MyRawStream() {
-  // create a custom stream
-  MyRawStream.prototype.write = function (rec) {
-    console.log(
-      "[%s] %s: %s",
-      rec.time.toISOString(),
-      bunyan.nameFromLevel[rec.level],
-      rec.msg
-    ); // log the record
-  };
-}
-
 const log = bunyan.createLogger({
   // create a logger with the following options :
   name: "MongoDB Driver", //
@@ -33,10 +21,6 @@ const log = bunyan.createLogger({
     {
       stream: process.stderr,
       level: "error", // log error and above to stderr
-    },
-    {
-      stream: new MyRawStream(),
-      type: "raw",
     },
     {
       type: "rotating-file",
