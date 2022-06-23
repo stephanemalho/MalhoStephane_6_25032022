@@ -56,7 +56,7 @@ exports.updateSauce = (req, res, next) => {
         ...JSON.parse(req.body.sauce),
         imageUrl: `images/${req.file.filename}`,
       }
-    : { ...req.body }; // if there is a file, add the image url
+    : { ...req.body }; // if there is a file, add the image url to the sauce object
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       if (sauce.userId !== req.auth.userID) {
@@ -64,12 +64,12 @@ exports.updateSauce = (req, res, next) => {
       }
       try {
         if (sauceObject.imageUrl) {
-          fs.unlinkSync(sauce.imageUrl);
+          fs.unlinkSync(sauce.imageUrl); // delete the old image synchronously
         }
       } catch (error) {
         console.log(error);
       }
-      Sauce.updateOne({ _id: req.params.id }, sauceObject, { new: true })
+      Sauce.findByIdAndUpdate({ _id: req.params.id }, sauceObject, { new: true })
         .then((sauce) =>
           res.status(200).json(sauce, hateoasLinks(req, sauce._id))
         ) // ok
@@ -77,6 +77,7 @@ exports.updateSauce = (req, res, next) => {
     })
     .catch((error) => res.status(404).json({ error })); // not found
 };
+
 
 /*****************************************************************
  *****************  DELETE THE SAUCE         *********************

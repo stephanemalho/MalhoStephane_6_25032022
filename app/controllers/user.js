@@ -175,7 +175,7 @@ exports.updateUser = async (req, res) => {
           .json({ error: "User not found." });
       }
       user.email = decryptString(user.email);
-      res.status(201).json(user, hateoasLinks(req, user._id));
+      res.status(201).json( user, hateoasLinks(req, user._id));
     })
     .catch((error) => res.status(500).json({ error })); // Internal Server Error
 };
