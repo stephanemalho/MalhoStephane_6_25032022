@@ -1,7 +1,7 @@
-# MalhoStephane_6_25032022
+## MalhoStephane_6_25032022
 
-## 🇫🇷 Construisez une API sécurisée pour une application d'avis gastronomiques 
-## 🇬🇧 Build a secure API for a food reviews application 
+# 🇫🇷 Construisez une API sécurisée pour une application d'avis gastronomiques 
+# 🇬🇧 Build a secure API for a food reviews application 
 
 >## 🖥 Front-end configuration (Angular) 
 >
@@ -19,7 +19,7 @@ git clone https://github.com/OpenClassrooms-Student-Center/Web-Developer-P6.git
 ```bash
   cd Web-Developer-P6
   npm install
-  npm run start
+  npm start
 ```
 
 >## 📡 Configuration API (back-end)
