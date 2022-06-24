@@ -32,7 +32,7 @@ Temporary Items
 
 ### Node ###
 # Logs
-logs
+logs/*
 !logs/.gitkeep
 *.log
 npm-debug.log*
@@ -304,6 +304,8 @@ fabric.properties
 # End of https://www.toptal.com/developers/gitignore/api/node,macos,visualstudiocode,phpstorm
 
 #image
-images/
+images/*
 !images/.gitkeep
+
+
 .idea
