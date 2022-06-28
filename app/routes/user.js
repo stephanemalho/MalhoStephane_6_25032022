@@ -4,33 +4,33 @@ const userCtrl = require("../controllers/user");
 const auth = require("../middleware/auth");
 const { body } = require("express-validator");
 const validationResultExpress = require("../middleware/validationAuth");
+const controlPassword = require("../middleware/control-password-user");
 
 // create routes for users
 router.post(
   "/signup",
   [
     body("email", "Format incorrect").trim().isEmail().normalizeEmail(),
-    body("password", "Format incorrect").trim().isLength({ min: 6 , max: 64}), // trim must be before isEmail
   ], 
   validationResultExpress,
+  controlPassword,
   userCtrl.signup
 ); // signup
 router.post(
   "/login",
   [
     body("email", "Format incorrect").trim().isEmail().normalizeEmail(),
-    body("password", "Format incorrect").trim().isLength({ min: 6 , max: 64}),
   ],
   validationResultExpress,
+  controlPassword,
   userCtrl.login
 ); // login
 router.delete("/", auth, userCtrl.deleteUser); // delete a user
 router.get("/", auth, userCtrl.readUser); // get the user info
-router.put("/", auth,  [
+router.put("/", auth,[
   body("email", "Format incorrect").trim().isEmail().normalizeEmail(),
-  body("password", "Format incorrect").trim().isLength({ min: 6 , max: 64}),
 ],
-validationResultExpress, userCtrl.updateUser); // update a user account
+validationResultExpress,controlPassword, userCtrl.updateUser); // update a user account
 router.post("/:id/report", auth, userCtrl.reportUser); // report the user
 router.get("/export-data", auth, userCtrl.exportData); // export the user')
 

@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
     const name = file.originalname.split(' ').join('_'); // set the name of the image and replace spaces by underscores
     const extension = MIME_TYPES[file.mimetype]; // get the extension of the file
     callback(null, name + Date.now() + '.' + extension); // set an other name with the date of the upload + the extension of the file
-    
+  
   }
 });
 

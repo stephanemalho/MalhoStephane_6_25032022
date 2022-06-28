@@ -20,7 +20,7 @@ const userSchema = mongoose.Schema({
       maxlength: [64, "Le mot de passe ne doit pas dépasser 64 caractères"], // A common maximum length is 64 characters due to limitations in certain hashing algorithms
       minNumbers: 1,
       minLowercase: 1,
-      minUppercase: 1
+      minUppercase: 1,
     },
     reports: 
     { 
@@ -32,7 +32,6 @@ const userSchema = mongoose.Schema({
       type: String,
       ref: "User" 
     }]
-    
 });
 
 userSchema.plugin(uniqueValidator, {message: 'Éxiste déja.'});
