@@ -7,6 +7,5 @@ const validationResultExpress = (req, res, next) => {
   }
   next();
 }
+
 module.exports = validationResultExpress;
-
-
